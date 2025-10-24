@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "820493747615",
+    "project_id": "bubblepassword",
+    "storage_bucket": "bubblepassword.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:820493747615:android:826d2365cc2a3b89e1a9aa",
+        "android_client_info": {
+          "package_name": "com.bubble.passwrosoft"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBuOo_65aH7KTNFHHWevZN9q-YV0hNEb1w"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
