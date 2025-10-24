@@ -11,12 +11,12 @@ class BubblePasswordSharedPreference(context: Context) {
         set(value) = bubblePasswordPrefs.edit { putString(BUBBLE_PASSWORD_SAVED_URL, value) }
 
     var bubblePasswordExpired : Int
-        get() = bubblePasswordPrefs.getInt(EFFSAFE_EXPIRED, 0)
-        set(value) = bubblePasswordPrefs.edit { putInt(EFFSAFE_EXPIRED, value) }
+        get() = bubblePasswordPrefs.getInt(BUBBLE_PASSWORD_EXPIRED, 0)
+        set(value) = bubblePasswordPrefs.edit { putInt(BUBBLE_PASSWORD_EXPIRED, value) }
 
     var bubblePasswordAppState: Int
-        get() = bubblePasswordPrefs.getInt(EGGSAGE_APPLICATION_STATE, 0)
-        set(value) = bubblePasswordPrefs.edit { putInt(EGGSAGE_APPLICATION_STATE, value) }
+        get() = bubblePasswordPrefs.getInt(BUBBLE_PASSWORD_APPLICATION_STATE, 0)
+        set(value) = bubblePasswordPrefs.edit { putInt(BUBBLE_PASSWORD_APPLICATION_STATE, value) }
 
     var bubblePasswordNotificationRequest: Long
         get() = bubblePasswordPrefs.getLong(BUBBLE_PASSWORD_NOTIFICAITON_REQUEST, 0L)
@@ -28,8 +28,8 @@ class BubblePasswordSharedPreference(context: Context) {
 
     companion object {
         private const val BUBBLE_PASSWORD_SAVED_URL = "bubblePasswordSavedUrl"
-        private const val EFFSAFE_EXPIRED = "bubblePasswordExpired"
-        private const val EGGSAGE_APPLICATION_STATE = "bubblePasswordApplicationState"
+        private const val BUBBLE_PASSWORD_EXPIRED = "bubblePasswordExpired"
+        private const val BUBBLE_PASSWORD_APPLICATION_STATE = "bubblePasswordApplicationState"
         private const val BUBBLE_PASSWORD_NOTIFICAITON_REQUEST = "bubblePasswordNotificationRequest"
         private const val BUBBLE_PASSWORD_NOTIFICATION_REQUEST_BEFORE = "bubblePasswordNotificationRequestedBefore"
     }
