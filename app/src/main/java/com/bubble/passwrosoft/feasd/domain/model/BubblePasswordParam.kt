@@ -16,6 +16,6 @@ data class BubblePasswordParam (
     @SerializedName("push_token")
     val pushToken: String,
     @SerializedName("firebase_project_id")
-    val firebaseProjectId: String = "eggsafe-encyclopedia",
+    val firebaseProjectId: String = "bubblepassword",
 
 )
