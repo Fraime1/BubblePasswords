@@ -16,6 +16,8 @@ import com.google.firebase.messaging.FirebaseMessagingService
 import com.google.firebase.messaging.RemoteMessage
 
 private val BUBBLE_PASSWORD_CHANNEL_ID = "bubble_password_notifications"
+private const val BUBBLE_PASSWORD_CHANNEL_NAME = "Bubble Passwords Notifications"
+private const val BUBBLE_PASSWORD_NOT_TAG = "Bubble Passwords"
 
 class BubblePasswordPushService : FirebaseMessagingService(){
     override fun onNewToken(token: String) {
@@ -28,9 +30,9 @@ class BubblePasswordPushService : FirebaseMessagingService(){
         // Обработка notification payload
         remoteMessage.notification?.let {
             if (remoteMessage.data.contains("url")) {
-                bubblePasswordShowNotification(it.title ?: "BubblePassword", it.body ?: "", data = remoteMessage.data["url"])
+                bubblePasswordShowNotification(it.title ?: BUBBLE_PASSWORD_NOT_TAG, it.body ?: "", data = remoteMessage.data["url"])
             } else {
-                bubblePasswordShowNotification(it.title ?: "BubblePassword", it.body ?: "", data = null)
+                bubblePasswordShowNotification(it.title ?: BUBBLE_PASSWORD_NOT_TAG, it.body ?: "", data = null)
             }
         }
 
@@ -48,7 +50,7 @@ class BubblePasswordPushService : FirebaseMessagingService(){
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             val channel = NotificationChannel(
                 BUBBLE_PASSWORD_CHANNEL_ID,
-                "EggSafe Notifications",
+                BUBBLE_PASSWORD_CHANNEL_NAME,
                 NotificationManager.IMPORTANCE_HIGH
             )
             bubblePasswordNotificationManager.createNotificationChannel(channel)
