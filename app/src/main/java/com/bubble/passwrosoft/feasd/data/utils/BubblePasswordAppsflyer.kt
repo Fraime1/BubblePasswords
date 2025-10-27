@@ -1,7 +1,6 @@
 package com.bubble.passwrosoft.feasd.data.utils
 
 import android.content.Context
-import android.os.Looper
 import android.util.Log
 import com.appsflyer.AppsFlyerConversionListener
 import com.appsflyer.AppsFlyerLib
@@ -12,6 +11,7 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import okhttp3.OkHttpClient
 import retrofit2.Call
 import retrofit2.Retrofit
@@ -21,6 +21,8 @@ import retrofit2.create
 import retrofit2.http.GET
 import retrofit2.http.Headers
 import retrofit2.http.Query
+import kotlin.coroutines.resume
+import kotlin.coroutines.suspendCoroutine
 
 
 private const val BUBBLE_PASSWORD_APP_DEV = "VrbyKhJnxRgK5GxARAx6eQ"
@@ -28,87 +30,90 @@ private const val BUBBLE_PASSWORD_APP_DEV = "VrbyKhJnxRgK5GxARAx6eQ"
 class BubblePasswordAppsflyer(private val context: Context) {
 
 
-    fun init(
-        bubblePasswordCallback: (BubblePasswordAppsFlyerState) -> Unit
-    ) {
-        val appsflyer = AppsFlyerLib.getInstance()
-        bubblePasswordSetDebufLogger(appsflyer)
-        bubblePasswordMinTimeBetween(appsflyer)
-        appsflyer.init(
-            BUBBLE_PASSWORD_APP_DEV,
-            object : AppsFlyerConversionListener {
-                override fun onConversionDataSuccess(p0: MutableMap<String, Any>?) {
-                    Looper.prepare()
-                    Log.d(BubblePasswordApp.BUBBLE_PASSWORD_MAIN_TAG, "AppsFlyer: onConversionDataSuccess")
-                    Log.d(BubblePasswordApp.BUBBLE_PASSWORD_MAIN_TAG, "AppsFlyer: $p0")
-                    Log.d(
-                        BubblePasswordApp.BUBBLE_PASSWORD_MAIN_TAG,
-                        "AppsFlyer: af_status: ${p0?.get("af_status")}"
-                    )
-//                    bubblePasswordCallback(BubblePasswordAppsFlyerState.BubblePasswordSuccess(p0))
-                    if (p0?.get("af_status") == "Organic") {
-                        val corouteScope = CoroutineScope(Dispatchers.IO)
-                        corouteScope.launch {
-                            try {
-                                delay(5000)
-                                val api = bubblePasswordGetApi("https://gcdsdk.appsflyer.com/install_data/v4.0/", null)
-                                val request = api.bubblePasswordGetClient(
-                                    devkey = BUBBLE_PASSWORD_APP_DEV,
-                                    deviceId = bubblePasswordGetAppsflyerId()
-                                )
-                                val response = request.awaitResponse()
-                                Log.d(
-                                    BubblePasswordApp.BUBBLE_PASSWORD_MAIN_TAG,
-                                    "AppsFlyer: Conversion after 5 seconds: ${response.body()}"
-                                )
-                                if (response.body()?.get("af_status") == "Organic") {
-                                    bubblePasswordCallback(BubblePasswordAppsFlyerState.BubblePasswordError)
-                                } else {
-                                    bubblePasswordCallback(BubblePasswordAppsFlyerState.BubblePasswordSuccess(response.body()))
+    suspend fun init(): BubblePasswordAppsFlyerState = withContext(Dispatchers.IO) {
+        suspendCoroutine { cont ->
+            val appsflyer = AppsFlyerLib.getInstance()
+            bubblePasswordSetDebufLogger(appsflyer)
+            bubblePasswordMinTimeBetween(appsflyer)
+
+            var isResumed = false
+            fun safeResume(state: BubblePasswordAppsFlyerState) {
+                if (!isResumed) {
+                    isResumed = true
+                    cont.resume(state)
+                }
+            }
+
+            appsflyer.init(
+                BUBBLE_PASSWORD_APP_DEV,
+                object : AppsFlyerConversionListener {
+                    override fun onConversionDataSuccess(p0: MutableMap<String, Any>?) {
+                        Log.d(BubblePasswordApp.BUBBLE_PASSWORD_MAIN_TAG, "onConversionDataSuccess: $p0")
+
+                        val afStatus = p0?.get("af_status")?.toString() ?: "null"
+                        if (afStatus == "Organic") {
+                            CoroutineScope(Dispatchers.IO).launch {
+                                try {
+                                    delay(5000)
+                                    val api = bubblePasswordGetApi(
+                                        "https://gcdsdk.appsflyer.com/install_data/v4.0/",
+                                        null
+                                    )
+                                    val response = api.bubblePasswordGetClient(
+                                        devkey = BUBBLE_PASSWORD_APP_DEV,
+                                        deviceId = bubblePasswordGetAppsflyerId()
+                                    ).awaitResponse()
+
+                                    val resp = response.body()
+                                    Log.d(BubblePasswordApp.BUBBLE_PASSWORD_MAIN_TAG, "After 5s: $resp")
+                                    if (resp?.get("af_status") == "Organic") {
+                                        safeResume(BubblePasswordAppsFlyerState.BubblePasswordError)
+                                    } else {
+                                        safeResume(
+                                            BubblePasswordAppsFlyerState.BubblePasswordSuccess(resp)
+                                        )
+                                    }
+                                } catch (d: Exception) {
+                                    Log.d(BubblePasswordApp.BUBBLE_PASSWORD_MAIN_TAG, "Error: ${d.message}")
+                                    safeResume(BubblePasswordAppsFlyerState.BubblePasswordError)
                                 }
-                            } catch (e: Exception) {
-                                Log.d(
-                                    BubblePasswordApp.BUBBLE_PASSWORD_MAIN_TAG,
-                                    "AppsFlyer: ${e.message}"
-                                )
-                                bubblePasswordCallback(BubblePasswordAppsFlyerState.BubblePasswordError)
                             }
+                        } else {
+                            safeResume(BubblePasswordAppsFlyerState.BubblePasswordSuccess(p0))
                         }
-                    } else {
-                        bubblePasswordCallback(BubblePasswordAppsFlyerState.BubblePasswordSuccess(p0))
                     }
+
+                    override fun onConversionDataFail(p0: String?) {
+                        Log.d(BubblePasswordApp.BUBBLE_PASSWORD_MAIN_TAG, "onConversionDataFail: $p0")
+                        safeResume(BubblePasswordAppsFlyerState.BubblePasswordError)
+                    }
+
+                    override fun onAppOpenAttribution(p0: MutableMap<String, String>?) {
+                        Log.d(BubblePasswordApp.BUBBLE_PASSWORD_MAIN_TAG, "onAppOpenAttribution")
+//                        safeResume(BubblePasswordAppsFlyerState.BubblePasswordError)
+                    }
+
+                    override fun onAttributionFailure(p0: String?) {
+                        Log.d(BubblePasswordApp.BUBBLE_PASSWORD_MAIN_TAG, "onAttributionFailure: $p0")
+//                        safeResume(BubblePasswordAppsFlyerState.BubblePasswordError)
+                    }
+                },
+                context.applicationContext
+            )
+
+            appsflyer.start(context, BUBBLE_PASSWORD_APP_DEV, object : AppsFlyerRequestListener {
+                override fun onSuccess() {
+                    Log.d(BubblePasswordApp.BUBBLE_PASSWORD_MAIN_TAG, "AppsFlyer started")
                 }
 
-                override fun onConversionDataFail(p0: String?) {
-                    Log.d(BubblePasswordApp.BUBBLE_PASSWORD_MAIN_TAG, "AppsFlyer: onConversionDataFail: $p0")
-                    bubblePasswordCallback(BubblePasswordAppsFlyerState.BubblePasswordError)
+                override fun onError(p0: Int, p1: String) {
+                    Log.d(BubblePasswordApp.BUBBLE_PASSWORD_MAIN_TAG, "AppsFlyer start error: $p0 - $p1")
+                    safeResume(BubblePasswordAppsFlyerState.BubblePasswordError)
                 }
-
-                override fun onAppOpenAttribution(p0: MutableMap<String, String>?) {
-                    Log.d(BubblePasswordApp.BUBBLE_PASSWORD_MAIN_TAG, "AppsFlyer: onAppOpenAttribution")
-                    bubblePasswordCallback(BubblePasswordAppsFlyerState.BubblePasswordError)
-                }
-
-                override fun onAttributionFailure(p0: String?) {
-                    Log.d(BubblePasswordApp.BUBBLE_PASSWORD_MAIN_TAG, "AppsFlyer: onAttributionFailure: $p0")
-                    bubblePasswordCallback(BubblePasswordAppsFlyerState.BubblePasswordError)
-                }
-            },
-            context.applicationContext
-        )
-        appsflyer.start(context, BUBBLE_PASSWORD_APP_DEV, object : AppsFlyerRequestListener {
-            override fun onSuccess() {
-                Log.d(BubblePasswordApp.BUBBLE_PASSWORD_MAIN_TAG, "AppsFlyer: Start is Success")
-            }
-
-            override fun onError(p0: Int, p1: String) {
-                Log.d(BubblePasswordApp.BUBBLE_PASSWORD_MAIN_TAG, "AppsFlyer: Start is Error")
-                Log.d(BubblePasswordApp.BUBBLE_PASSWORD_MAIN_TAG, "AppsFlyer: Error code: $p0, error message: $p1")
-                bubblePasswordCallback(BubblePasswordAppsFlyerState.BubblePasswordError)
-            }
-
-        })
+            })
+        }
     }
+
 
     private fun bubblePasswordGetAppsflyerId(): String {
         val appsflyrid = AppsFlyerLib.getInstance().getAppsFlyerUID(context) ?: ""

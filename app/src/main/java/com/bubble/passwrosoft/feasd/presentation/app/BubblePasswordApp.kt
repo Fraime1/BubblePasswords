@@ -5,7 +5,10 @@ import android.view.WindowManager
 import com.bubble.passwrosoft.feasd.data.utils.BubblePasswordAppsflyer
 import com.bubble.passwrosoft.feasd.data.utils.BubblePasswordSystemService
 import com.bubble.passwrosoft.feasd.presentation.di.bubblePasswordModule
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.launch
 import org.koin.android.ext.koin.androidContext
 import org.koin.android.ext.koin.androidLogger
 import org.koin.core.context.startKoin
@@ -35,8 +38,8 @@ class BubblePasswordApp : Application() {
         val bubblePasswordAppsflyer = BubblePasswordAppsflyer(this)
         val bubblePasswordSystemService = BubblePasswordSystemService(this)
         if (bubblePasswordSystemService.bubblePasswordIsOnline()) {
-            bubblePasswordAppsflyer.init { data ->
-                bubblePasswordConversionFlow.value = data
+            CoroutineScope(Dispatchers.IO).launch {
+                bubblePasswordConversionFlow.value = bubblePasswordAppsflyer.init()
             }
         }
     }
