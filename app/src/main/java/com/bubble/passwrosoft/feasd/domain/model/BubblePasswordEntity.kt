@@ -9,5 +9,5 @@ data class BubblePasswordEntity (
     @SerializedName("url")
     val url: String,
     @SerializedName("expires")
-    val expires: Int,
+    val expires: Long,
 )

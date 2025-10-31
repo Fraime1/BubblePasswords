@@ -27,6 +27,11 @@ class BubblePasswordVi(
     private val bubblePasswordCallback: BubblePasswordCallBack,
     private val bubblePasswordWindow: Window
 ) : WebView(bubblePasswordContext) {
+    private var fileChooserHandler: ((ValueCallback<Array<Uri>>?) -> Unit)? = null
+
+    fun setFileChooserHandler(handler: (ValueCallback<Array<Uri>>?) -> Unit) {
+        this.fileChooserHandler = handler
+    }
     init {
         val webSettings = settings
         webSettings.apply {
@@ -113,7 +118,7 @@ class BubblePasswordVi(
                 filePathCallback: ValueCallback<Array<Uri>>?,
                 fileChooserParams: WebChromeClient.FileChooserParams?,
             ): Boolean {
-                bubblePasswordCallback.bubblePasswordOnShowFileChooser(filePathCallback)
+                fileChooserHandler?.invoke(filePathCallback)
                 return true
             }
             override fun onCreateWindow(

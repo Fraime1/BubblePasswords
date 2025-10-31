@@ -10,7 +10,5 @@ interface BubblePasswordCallBack {
 
     fun bubblePasswordOnPermissionRequest(bubblePasswordRequest: PermissionRequest?)
 
-    fun bubblePasswordOnShowFileChooser(bubblePasswordFilePathCallback: ValueCallback<Array<Uri>>?)
-
     fun bubblePasswordOnFirstPageFinished()
 }

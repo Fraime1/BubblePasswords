@@ -19,21 +19,6 @@ import org.koin.android.ext.android.inject
 
 class BubblePasswordActivity : AppCompatActivity() {
 
-    lateinit var bubblePasswordPhoto: Uri
-    var bubblePasswordFilePathFromChrome: ValueCallback<Array<Uri>>? = null
-
-    val bubblePasswordTakeFile = registerForActivityResult(ActivityResultContracts.PickVisualMedia()) {
-        bubblePasswordFilePathFromChrome?.onReceiveValue(arrayOf(it ?: Uri.EMPTY))
-    }
-
-    val bubblePasswordTakePhoto = registerForActivityResult(ActivityResultContracts.TakePicture()) {
-        if (it) {
-            bubblePasswordFilePathFromChrome?.onReceiveValue(arrayOf(bubblePasswordPhoto))
-        } else {
-            bubblePasswordFilePathFromChrome?.onReceiveValue(null)
-        }
-    }
-
     private val bubblePasswordPushHandler by inject<BubblePasswordPushHandler>()
 
     override fun onCreate(savedInstanceState: Bundle?) {

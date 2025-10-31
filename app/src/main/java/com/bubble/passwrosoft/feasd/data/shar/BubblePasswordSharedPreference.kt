@@ -10,9 +10,9 @@ class BubblePasswordSharedPreference(context: Context) {
         get() = bubblePasswordPrefs.getString(BUBBLE_PASSWORD_SAVED_URL, "") ?: ""
         set(value) = bubblePasswordPrefs.edit { putString(BUBBLE_PASSWORD_SAVED_URL, value) }
 
-    var bubblePasswordExpired : Int
-        get() = bubblePasswordPrefs.getInt(BUBBLE_PASSWORD_EXPIRED, 0)
-        set(value) = bubblePasswordPrefs.edit { putInt(BUBBLE_PASSWORD_EXPIRED, value) }
+    var bubblePasswordExpired : Long
+        get() = bubblePasswordPrefs.getLong(BUBBLE_PASSWORD_EXPIRED, 0L)
+        set(value) = bubblePasswordPrefs.edit { putLong(BUBBLE_PASSWORD_EXPIRED, value) }
 
     var bubblePasswordAppState: Int
         get() = bubblePasswordPrefs.getInt(BUBBLE_PASSWORD_APPLICATION_STATE, 0)
